@@ -12,4 +12,7 @@ module.exports = {
   devServer: {
     static: './dist',
   },
+  experiments: {
+    topLevelAwait: true,
+  },
 };
