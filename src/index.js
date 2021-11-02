@@ -1,65 +1,96 @@
 // module aliases
-import { Engine, Render, Runner, Body, Bodies, Composite } from 'matter-js';
+import { randomColor} from 'randomcolor';
+import Evaluator from './Evaluator';
+import Math from './Math'
 
-Body.applyRelativeForce = (body, relativePosition, relativeForce) => {
-  const sin = Math.sin(body.angle);
-  const cos = Math.cos(body.angle);
+let genColor = randomColor();
 
-  const position = {
-      x: body.position.x + cos * relativePosition.x - sin * relativePosition.y,
-      y: body.position.y + sin * relativePosition.x + cos * relativePosition.y,
-  };
-
-  const force = {
-      x: cos * relativeForce.x - sin * relativeForce.y,
-      y: sin * relativeForce.x + cos * relativeForce.y,
-  };
-
-  Body.applyForce(body, position, force);
+function generateRandom() {
+  return {
+    fillStyle: genColor,
+    weights: [
+      new Array(3).fill(0).map(() => Math.randomArbitrary(-10,10)),
+      new Array(3).fill(0).map(() => Math.randomArbitrary(-10,10)),
+    ],
+  }
 }
 
-// create an engine
-var engine = Engine.create({
-  gravity: {
-    x: 0,
-    y: 0,
+function crossover(popA, popB) {
+  return {
+    fillStyle: genColor,
+    weights: [
+      popA.weights[0].map((weight, index) => {return (popB.weights[0][index] - weight) * Math.random() + weight}),
+      popA.weights[1].map((weight, index) => {return (popB.weights[1][index] - weight) * Math.random() + weight}),
+    ],
   }
-});
+}
 
-// create a renderer
-var render = Render.create({
-    element: document.body,
-    engine: engine,
-    options: {
-      enabled: true,
-      wireframes: true,
-      showVelocity: true,
-      showAngleIndicator: true,
-      showAxes: true,
-      showPositions: true,
+function mutate(pop) {
+  const newPop = {
+    fillStyle: genColor,
+    weights: [
+      [...(pop.weights[0])],
+      [...(pop.weights[1])],
+    ],
+  };
+
+  const mutP = Math.randomInt(2);
+  const mutW = Math.randomInt(3);
+  newPop.weights[mutP][mutW] = Math.randomArbitrary(-10,10);
+
+  return newPop;
+}
+
+let population = Array(20).fill(0).map(() => generateRandom());
+let targetPosition = {x: 400, y: 600};
+let generation = 0;
+while(generation < 100) {
+  generation++;
+  if(generation % 5 == 0) {
+    targetPosition = {
+      x: Math.randomInt(600) + 100,
+      y: Math.randomInt(400) + 400,
     }
-});
-
-const ROBOT_SIZE = 20;
-
-// create two boxes and a ground
-var boxA = Bodies.rectangle(400, 100, ROBOT_SIZE, ROBOT_SIZE);
-// var boxB = Bodies.rectangle(450, 50, 80, 80);
-// var ground = Bodies.rectangle(400, 610, 810, 60, { isStatic: true });
-
-// add all of the bodies to the world
-Composite.add(engine.world, [boxA]);
-
-// run the renderer
-Render.run(render);
-
-let tick = 0
-while(tick <= 600000) {
-  if(tick % 10 == 0){
-    Body.applyRelativeForce(boxA, {x:-ROBOT_SIZE/2.5, y: 0}, {x:0, y:0.01});
-    Body.applyRelativeForce(boxA, {x:-ROBOT_SIZE/2.5, y: 0}, {x:0, y:0.002});
   }
-  Engine.update(engine, 1000/60);
-  const time = await new Promise(resolve => setTimeout(resolve, 1000/60));
-  tick++;
+  genColor = randomColor();
+  const populationFitness = await Evaluator.evaluate(population, {
+    simTime: 8,
+    targetPosition
+  });
+  const battleOrder = Math.shuffleArray(population.map((_pop, index) => index ));
+  let newPopulation = [];
+
+  for(let i = 0; i < battleOrder.length; i+=2){
+    const j = i+1;
+    let winner = population[i];
+    if(populationFitness[i] > populationFitness[j]){
+      winner = population[j];
+    }
+
+    newPopulation.push(winner);
+  }
+
+  while(newPopulation.length < 15){
+    newPopulation.push(crossover(
+      newPopulation[Math.randomInt(newPopulation.length)],
+      newPopulation[Math.randomInt(newPopulation.length)],
+    ));
+  }
+
+  while(newPopulation.length < 18){
+    newPopulation.push(mutate(
+      newPopulation[Math.randomInt(newPopulation.length)]
+    ));
+  }
+
+  while(newPopulation.length < 20){
+    newPopulation.push(generateRandom());
+  }
+
+  population = newPopulation;
+  console.log(population);
 }
+
+
+console.log(ev);
+await Evaluator.evaluate(population);
