@@ -4,29 +4,38 @@ import Evaluator from './Evaluator';
 import Math from './Math'
 
 let genColor = randomColor();
+let idCounter = 0;
 
 function generateRandom() {
   return {
+    id: idCounter++,
     fillStyle: genColor,
     weights: [
-      new Array(3).fill(0).map(() => Math.randomArbitrary(-10,10)),
-      new Array(3).fill(0).map(() => Math.randomArbitrary(-10,10)),
+      new Array(3).fill(0).map(() => Math.randomArbitrary(-1,1)),
+      new Array(3).fill(0).map(() => Math.randomArbitrary(-1,1)),
     ],
   }
 }
 
+function crossoverValue(a, b){
+  const random = Math.random() * 2 - 0.5;
+  return ((a-b) * random) + b;
+}
+
 function crossover(popA, popB) {
   return {
+    id: idCounter++,
     fillStyle: genColor,
     weights: [
-      popA.weights[0].map((weight, index) => {return (popB.weights[0][index] - weight) * Math.random() + weight}),
-      popA.weights[1].map((weight, index) => {return (popB.weights[1][index] - weight) * Math.random() + weight}),
+      popA.weights[0].map((value, index) => crossoverValue(value, popB.weights[0][index])),
+      popA.weights[1].map((value, index) => crossoverValue(value, popB.weights[1][index])),
     ],
   }
 }
 
 function mutate(pop) {
   const newPop = {
+    id: idCounter++,
     fillStyle: genColor,
     weights: [
       [...(pop.weights[0])],
@@ -36,19 +45,19 @@ function mutate(pop) {
 
   const mutP = Math.randomInt(2);
   const mutW = Math.randomInt(3);
-  newPop.weights[mutP][mutW] = Math.randomArbitrary(-10,10);
+  newPop.weights[mutP][mutW] = Math.randomArbitrary(-1,1);
 
   return newPop;
 }
 
-let population = Array(20).fill(0).map(() => generateRandom());
+let population = Array(80).fill(0).map(() => generateRandom());
 let targetPosition = {x: 400, y: 600};
 let generation = 0;
 while(generation < 100) {
   generation++;
-  if(generation % 5 == 0) {
+  if(generation % 3 == 0) {
     targetPosition = {
-      x: Math.randomInt(600) + 100,
+      x: Math.randomInt(700) + 50,
       y: Math.randomInt(400) + 400,
     }
   }
@@ -70,27 +79,26 @@ while(generation < 100) {
     newPopulation.push(winner);
   }
 
-  while(newPopulation.length < 15){
+  console.log(newPopulation);
+
+  while(newPopulation.length < 60){
     newPopulation.push(crossover(
       newPopulation[Math.randomInt(newPopulation.length)],
       newPopulation[Math.randomInt(newPopulation.length)],
     ));
   }
 
-  while(newPopulation.length < 18){
+  while(newPopulation.length < 75){
     newPopulation.push(mutate(
       newPopulation[Math.randomInt(newPopulation.length)]
     ));
   }
 
-  while(newPopulation.length < 20){
+  while(newPopulation.length < 5){
     newPopulation.push(generateRandom());
   }
 
   population = newPopulation;
-  console.log(population);
 }
 
-
-console.log(ev);
 await Evaluator.evaluate(population);
