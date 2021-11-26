@@ -10,6 +10,12 @@ const shuffle = arr => {
 
 const randomInt = (n=20) => Math.floor(Math.random() * n);
 
+const removeDups = (arr) => arr.map(cur => JSON.stringify(cur))
+  .filter(function(curr, index, self) {
+    return self.indexOf(curr) == index;
+  })
+  .map(cur => JSON.parse(cur));
+
 // CALCULO DE  DISTANCIA
 const distances = {
   "SE": {"SE": 0, "PA": 2029, "MG": 1604, "RR": 5410, "DF": 1642, "MS": 2571, "MT": 2702, "PR": 2566, "SC": 2846, "CE": 1102, "GO": 1843, "PB": 613, "AP": 1967, "AL": 271, "AM": 4662, "RN": 784, "TO": 1644, "RS": 3282, "RO": 4155, "PE": 500, "AC": 4660, "RJ": 1827, "BA": 320, "MA": 1709, "SP": 2158, "PI": 1120, "ES": 1366},
@@ -164,20 +170,15 @@ population = generateSolutions(20);
 while(generation < 500000) {
   const [_bestScore, bestSolution] = getBest(population); 
 
-  while(population.length < 24) {
-    population.push(crossover(bestSolution, population[randomInt(population.length)]));
-    population.push(crossover(population[randomInt(population.length)], bestSolution));
-  }
-  while(population.length < 30) {
+  while(population.length < 32) {
     population.push(crossover(population[randomInt(population.length)], population[randomInt(population.length)]));
   }
 
-  while(population.length < 33) {
-    population.push(mutate(bestSolution, 1));
+  while(population.length < 38) {
+    population.push(mutate(population[randomInt(population.length)], 3));
   }
-  while(population.length < 36) {
-    population.push(mutate(population[randomInt(population.length)], 1));
-  }
+  
+  population = removeDups(population);
 
   while(population.length < 40) {
     population.push(generateSolutions(1)[0]);
