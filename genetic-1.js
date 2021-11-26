@@ -120,14 +120,15 @@ let newSolutions = [...winners];
 
 // ACASALAMENTO
 function crossover(solutionA, solutionB) {
-  return [...new Set(solutionA.slice(0, 8).concat(solutionB.slice(8)).concat(solutionA))];
+  const gen = randomInt(24) + 1
+  return [...new Set(solutionA.slice(0, gen).concat(solutionB.slice(gen)).concat(solutionA))];
 }
 
 crossoverd = crossover(solutions[0],solutions[1]);
 
 // MUTAÇÃO
 function mutate(solution, m=2) {
-  let newSolution = [...solution];
+  let newSolution = [...solution].reverse();
 
   for(let i = 0; i < m; i++) {
     const x = randomInt(27);
